@@ -72,8 +72,8 @@ fi
 ihshost=$1
 ihsprivate=$2
 ihsuser=$3
-ihspay='{ "9090": "'"$ihsuser"'"}'
-ihsresponse=$(coap-client-gnutls -m post -u "Client_identity" -k "$ihsprivate" -e "$ihspay" -p 5684 "coaps://${ihshost}/15011/9063")
+
+ihsresponse=$(coap-client-gnutls -m post -u "Client_identity" -k "$ihsprivate" -e "{ \"9090\": \"${ihsuser}\" }"  'coaps://'"$ihshost"':5684/15011/9063')
 
 # gateway returns JSON {"9091": "shared_key", ... } if reg successful
 if
@@ -94,7 +94,7 @@ then
     exit 1
 else
     # gateway has produced a key, so store it as JSON credentials file
-    ihskey="$(echo ${ihsresponse} | jq '.["9091"]')"
+    ihskey="$(echo ${ihsresponse} | jq -r '.["9091"]')"
     echo '{"ihshost": "'$ihshost'", "ihskey": "'$ihskey'", "ihsuser": "'$ihsuser'"}' | jq -S '.' > "$ihsconf"
     
     if
