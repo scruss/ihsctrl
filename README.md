@@ -33,6 +33,8 @@ user's *~/bin* folder.
 
     sudo apt install libcoap2 libcoap2-bin libcoap2-dev libcoap2-doc jq
 
+One of these packages pulls in a *lot* of other files, so please be patient.
+
 If the *~/bin* folder doesn't exist, make it and temporarily add it to
 your PATH:
 
