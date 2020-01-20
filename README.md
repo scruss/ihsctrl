@@ -31,15 +31,13 @@ user's *~/bin* folder.
 
 ### Installation on Ubuntu / Raspbian
 
-    sudo apt install libcoap2 libcoap2-bin libcoap2-dev libcoap2-doc jq
-
-One of these packages pulls in a *lot* of other files, so please be patient.
+    sudo apt install libcoap2-bin jq
 
 If the *~/bin* folder doesn't exist, make it and temporarily add it to
 your PATH:
 
     mkdir ~/bin
-	PATH=${PATH}:~/bin
+    PATH=${PATH}:~/bin
 	
 *~/bin* is automatically added to a user's path if it exists, so no
 modification of profiles is required.
@@ -47,13 +45,13 @@ modification of profiles is required.
 Clone this repository and change to its directory:
 
     git clone https://github.com/scruss/ihsctrl.git
-	cd ihsctrl
+    cd ihsctrl
 
 Now copy the wrapper scripts to *~/bin* and ensure they are
 executable:
 
     cp ihs* ~/bin
-	chmod +x ~/bin/ihs*
+    chmod +x ~/bin/ihs*
 	
 You can now set up the connection using `ihsinit`. To do this, you
 should have:
