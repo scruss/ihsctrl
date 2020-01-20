@@ -1,0 +1,33 @@
+#!/bin/bash
+# ihsinfo - tabulate IHS devices, types and status - scruss, 2020-01
+
+ihsconf="$HOME/.config/ihsctrl/ihsconf.json"
+
+if
+    [ ! -f "$ihsconf" ]
+then
+    echo 'ERROR: ihs not configured'
+    exit 1
+fi
+
+eval "$(jq -r '@sh "ihshost=\(.ihshost) ihskey=\(.ihskey) ihsuser=\(.ihsuser)"' "$ihsconf")"
+
+
+printf "%-5s  %-23s  %-31s  %-6s\n" "id" "name" "type" "status"
+printf "%-5s  %-23s  %-31s  %-6s\n" '=====' '======================='\
+       '===============================' '======'
+ihslist | while read id
+do
+    coap-client-gnutls -m get -u "$ihsuser" -k "$ihskey" \
+		       -p 5684 "coaps://${ihshost}/15001/${id}" |\
+	jq -r '[."9003",."9001",."3"."1",(."3312"//."3311")[0]."5850"]|@tsv'| \
+	while IFS=$'\t' read id name type status
+	do
+	    if
+		[ -z "$status" ]
+	    then
+		status='n/a'
+	    fi
+	    printf "%-5s  %-23s  %-31s  %-6s\n" "$id" "$name" "$type" "$status"
+	done
+done

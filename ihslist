@@ -1,0 +1,17 @@
+#!/bin/bash
+# ihslist - list numeric IDs of known IHS devices - scruss, 2020-01
+
+ihsconf="$HOME/.config/ihsctrl/ihsconf.json"
+
+if
+    [ ! -f "$ihsconf" ]
+then
+    echo 'ERROR: ihs not configured'
+    exit 1
+fi
+
+eval "$(jq -r '@sh "ihshost=\(.ihshost) ihskey=\(.ihskey) ihsuser=\(.ihsuser)"' "$ihsconf")"
+
+coap-client-gnutls -m get -u "$ihsuser" -k "$ihskey" \
+		   -p 5684 "coaps://${ihshost}/15001" |\
+    jq '.[]'

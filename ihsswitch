@@ -1,0 +1,35 @@
+#!/bin/bash
+# ihsswitch - turn an IHS outlet/bulb on/off - scruss, 2020-01
+#  takes two args: device number and 0/1
+
+ihsconf="$HOME/.config/ihsctrl/ihsconf.json"
+
+if
+    [ ! -f "$ihsconf" ]
+then
+    echo 'ERROR: ihs not configured'
+    exit 1
+fi
+
+if
+    [ $# -lt 2 ]
+then
+    echo Usage: ihsswitch id 0\|1
+    exit 1
+fi
+
+eval "$(jq -r '@sh "ihshost=\(.ihshost) ihskey=\(.ihskey) ihsuser=\(.ihsuser)"' "$ihsconf")"
+ihsid="$1"
+ihssw="$2"
+
+ihsty=$(ihsinfo | grep "$ihsid")
+if
+    [ -z "$ihsty" ]
+then
+    echo Device "$ihsid" not found
+    exit 1
+fi
+
+ihspay='{ "3312": [{ "5850": '"$ihssw"' }] }'
+coap-client-gnutls -m put -u "$ihsuser" -k "$ihskey" -e "$ihspay" \
+		   -p 5684 "coaps://${ihshost}/15001/${ihsid}"

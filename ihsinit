@@ -1,0 +1,122 @@
+#!/bin/bash
+# ihsinit - set up IHS auth - scruss, 2020-01
+#  takes three args: address, private_key and user
+#  we never, *ever* store the private key but use it to generate
+#    the shared key.
+
+ihsconf="$HOME/.config/ihsctrl/ihsconf.json"
+
+if
+    [ -f "$ihsconf" ]
+then
+    echo 'ERROR: ihsctrl already configured. If you wish to reconfigure'
+    echo '       please delete' "$ihsconf"
+    echo '       and try again.'
+    if
+	command -v ihsinfo > /dev/null 2>&1
+    then
+	echo '       Your known devices (if any) are:'
+	echo ''
+	ihsinfo
+    fi
+    exit 1
+fi
+
+if
+    [ $# -lt 3 ]
+then
+    echo Usage: "$0" address private_key user
+    exit 1
+fi
+
+mkdir --parents $(dirname "$ihsconf")
+if
+    [ ! -d $(dirname "$ihsconf") ]
+then
+    echo "ERROR: couldn't create" $(dirname "$ihsconf")
+    echo '       something is badly wrong.'
+    exit 1
+fi
+
+if
+    [ ! -w $(dirname "$ihsconf") ]
+then
+    echo "ERROR:" $(dirname "$ihsconf") 'is not writeable'
+    echo '       something is badly wrong.'
+    exit 1
+fi
+
+# check for installed software
+if
+    command -v coap-client-gnutls > /dev/null 2>&1
+then
+    echo "OK   : coap-client-gnutls is installed"
+else
+    echo "ERROR: coap-client-gnutls is not available"
+    echo "       please install it"
+    echo "       (It's typically in the libcoap2-bin package)"
+    exit 1
+fi
+
+if
+    command -v jq > /dev/null 2>&1
+then
+    echo "OK   : jq is installed"
+else
+    echo "ERROR: jq is not available"
+    echo "       please install it"
+    echo "       (It's typically in the jq package)"
+    exit 1
+fi
+
+ihshost=$1
+ihsprivate=$2
+ihsuser=$3
+ihspay='{ "9090": "'"$ihsuser"'"}'
+ihsresponse=$(coap-client-gnutls -m post -u "Client_identity" -k "$ihsprivate" -e "$ihspay" -p 5684 "coaps://${ihshost}/15011/9063")
+
+# gateway returns JSON {"9091": "shared_key", ... } if reg successful
+if
+    echo "$ihsresponse" | grep --quiet --invert-match "9091"
+then
+    echo "ERROR: incorrect or no response from gateway. Please check:"
+    echo "     * is the security code on the back of the gateway exactly"
+    echo "      " "$ihsprivate" "?"
+    echo "     * is the gateway really at LAN address" "$ihshost" "?"
+    echo "     * is the user ID" "$ihsuser" "unique on this network?"
+    if
+	[ ! -z "$ihsresponse" ]
+    then
+	echo ''
+	echo 'Response was:'
+	echo "$ihsresponse"
+    fi
+    exit 1
+else
+    # gateway has produced a key, so store it as JSON credentials file
+    ihskey="$(echo ${ihsresponse} | jq '.["9091"]')"
+    echo '{"ihshost": "'$ihshost'", "ihskey": "'$ihskey'", "ihsuser": "'$ihsuser'"}' | jq -S '.' > "$ihsconf"
+    
+    if
+	[ ! -f "$ihsconf" ]
+    then
+	# quit in unlikely event of not being able to save credentials
+	echo 'ERROR: could not create configuration file'
+	echo '      ' "$ihsconf"
+	echo '       something is badly wrong.'
+	echo ''
+	echo 'Your credentials are:'
+	echo '{"ihshost": "'$ihshost'", "ihskey": "'$ihskey'", "ihsuser": "'$ihsuser'"}' | jq -S '.'
+	exit 1
+    fi
+    
+    # all is successfully configured
+    echo "OK   : ihsctrl is configured"
+    if
+	command -v ihsinfo > /dev/null 2>&1
+    then
+	echo '       Your known devices (if any) are:'
+	echo ''
+	ihsinfo
+    fi
+fi
