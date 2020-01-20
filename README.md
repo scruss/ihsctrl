@@ -244,6 +244,8 @@ gateway.
 5. The scripts run with standard user privileges from the *~/bin*
    folder, and are intended for use in cron jobs and other
    low-complexity tasks.
+   
+6. Scripts and howtos on the web from when this hardware was launched (2017-2018) rely on building a custom version of the libcoap2 tools. Those instructions no longer work.
 
 ## Author
 
