@@ -133,6 +133,26 @@ off. Replacing the last argument with 1 would turn it back on.
 The (0|1) final argument is not checked, but using anything other than
 0 or 1 will not do anything useful.
 
+### ihsstatus
+
+    ihsstatus id
+    
+Example:
+
+    ihsstatus 65544
+    
+Returns 0 or 1, depending on whether the device is on or off. If the device has no on or off status, returns nothing.
+
+### ihstoggle
+
+    ihstoggle id
+    
+Example:
+
+    ihstoggle 65544
+    
+Toggles the power state of a device, or does nothing if the device returns no status. If you think this script feeds the inverted output of `ihsstatus` into `ihsswitch`, you're darn right it does!
+
 ### ihslist
 
 The least useful of the tools, it is used internally by `ihsinfo` and
