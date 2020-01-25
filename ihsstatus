@@ -1,0 +1,35 @@
+#!/bin/bash
+# ihsstatus - indicates if an IHS device is on (1) or off (0) - scruss, 2020-01
+#  takes one arg: device number
+
+ihsconf="$HOME/.config/ihsctrl/ihsconf.json"
+
+if
+    [ ! -f "$ihsconf" ]
+then
+    echo 'ERROR: ihs not configured'
+    exit 1
+fi
+
+if
+    [ $# -lt 1 ]
+then
+    echo Usage: $0 id
+    exit 1
+fi
+
+eval "$(jq -r '@sh "ihshost=\(.ihshost) ihskey=\(.ihskey) ihsuser=\(.ihsuser)"' "$ihsconf")"
+ihsid="$1"
+
+ihsty=$(ihsinfo | grep "$ihsid")
+if
+    [ -z "$ihsty" ]
+then
+    echo Device "$ihsid" not found
+    exit 1
+fi
+
+# a very cut down version of the ihsinfo query
+coap-client-gnutls -m get -u "$ihsuser" -k "$ihskey" \
+		   -p 5684 "coaps://${ihshost}/15001/${ihsid}" |\
+    jq -r '(."3312"//."3311")[0]."5850"' | grep --invert-match null

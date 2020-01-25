@@ -1,0 +1,28 @@
+#!/bin/bash
+# ihstoggle - invert the state of an IHS device - scruss, 2020-01
+#  takes one arg: device number
+
+ihsconf="$HOME/.config/ihsctrl/ihsconf.json"
+
+if
+    [ ! -f "$ihsconf" ]
+then
+    echo 'ERROR: ihs not configured'
+    exit 1
+fi
+
+if
+    [ $# -lt 1 ]
+then
+    echo Usage: $0 id
+    exit 1
+fi
+
+ihsid="$1"
+notstate=$(ihsstatus "$ihsid" | tr '01' '10')
+if
+    [ ! -z "$notstate" ]
+then
+    ihsswitch "$ihsid" "$notstate"
+fi
+
