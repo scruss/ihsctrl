@@ -20,6 +20,8 @@ won't.
 
 *ihsctrl* also only supports one gateway per installation.
 
+In order to keep the code simple and to avoid implementing a server model, commands sent simultaneously to the gateway have undefined results: one command may succeed, but more likely, all simultaneous commands may fail. This can be a confusing issue when using *ihsctrl* from cron, as jobs triggered from separate crontab lines may collide and fail.
+
 ## Installation
 
 This software was developed, (minimally) tested and deployed on
@@ -207,6 +209,14 @@ times local:
 **NB**: The author uses an older version of sunwait
 ([sunwait-20041208.tar.gz](https://web.archive.org/web/20151016135925/http://www.risacher.org/sunwait/sunwait-20041208.tar.gz))
 and the current version may have different calling syntax.
+
+**IMPORTANT** *ihsctrl* does not support simultaneous switching of multiple devices, as noted in **Limitations**. Please check your crontab for jobs that might trigger at exactly the same time: they are *highly unlikely* to work as expected. Workarounds for this include:
+
+* combining command fields into the one crontab line: `* * * * * ihsswitch … ; ihsswitch … `, etc.
+
+* delaying commands by a small amount: if one job triggers at 07:30, say, make the competing job run at 07:31.
+
+This may be an insurmountable problem for some use cases.
 
 ## Files
 
